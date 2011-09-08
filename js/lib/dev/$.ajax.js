@@ -13,15 +13,12 @@ function() {
 			callback: function() {}
 		};
 	
-	$.ajax = $['ajax'] || {};
-	
-	$.ajax.send = $.ajax['send'] || function(args) {
-		var XHRIDs, label, i;
+	$.ajax = $['ajax'] || function(args) {
 		$.defaults(args, defaults);
 		if (!args.xhr) {
 			try { args.xhr = new XMLHttpRequest(); }
 			catch (e1) {
-				XHRIDs = ['MSXML2.XMLHTTP.5.0', 'MSXML2.XMLHTTP.4.0', 'MSXML2.XMLHTTP.3.0', 'MSXML2.XMLHTTP', 'Microsoft.XMLHTTP'];
+				var XHRIDs = ['MSXML2.XMLHTTP.5.0', 'MSXML2.XMLHTTP.4.0', 'MSXML2.XMLHTTP.3.0', 'MSXML2.XMLHTTP', 'Microsoft.XMLHTTP'];
 				while (XHRIDs.length) {
 					try { args.xhr = new ActiveXObject(XHRIDs.shift()); }
 					catch (e2) { continue; }
@@ -39,11 +36,11 @@ function() {
 			}
 		};
 		if (args.headers.length) {
-			for (i = 0; i < args.headers.length; i++) {
-				for (label in args.headers[i]) {
-					args.xhr.setRequestHeader(label, args.headers[i][label]);
-				}
-			}
+			$.each(args.headers, function(header) {
+				$.each(header, function(content, label) {
+					args.xhr.setRequestHeader(label, content);
+				})
+			});
 		}
 		if (args.timeout && args.timeout > 0) {
 			args.timerid = setTimeout(function() {
@@ -53,19 +50,6 @@ function() {
 			}, args.timeout);
 		}
 		args.xhr.send(args.data);
-	};
-	
-	$.ajax.get = $.ajax['get'] || function(args) {
-		args.method = "GET";
-		args.data = null;
-		$.ajax.send(args);
-	};
-	
-	$.ajax.postJSON = $.ajax['postJSON'] || function(args) {
-		args.method = "POST";
-		args.headers = [{'content-type' : 'application/json'}];
-		args.data = args.data;
-		$.ajax.send(args);
 	};
 		
 });

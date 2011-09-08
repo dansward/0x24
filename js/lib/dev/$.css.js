@@ -56,6 +56,6 @@
 		while (styles[resp.url].length) styles[resp.url].shift()();
 	}
 	
-	function fetch(url) { return function() { $.ajax.get({ url : url, callback : appendStyle }); }; }
+	function fetch(url) { return function() { $.ajax({ url : url, callback : appendStyle }); }; }
 	
 })();

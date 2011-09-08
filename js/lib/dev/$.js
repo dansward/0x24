@@ -83,7 +83,7 @@
 		if (modready(resp.url, {})) depready(resp.url);
 	}
 	
-	function fetch(url) { return function() { $.ajax.get({ url : url, callback : inline }); }; }
+	function fetch(url) { return function() { $.ajax({ url : url, callback : inline }); }; }
 
 	scripts = document.getElementsByTagName('script');
 	for (i=0; i<scripts.length; i++) {
