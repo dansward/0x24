@@ -28,7 +28,7 @@ A dependency is a module that must be loaded before another module that depends 
 
 ### Step 1:
 
-Add a <script> tag to your html. Anywhere inside the <head> or <body> will work. Set the src attribute to the url of the $.js module and add a main-src attribute set to the url of the main module of your application.
+Add a script tag to your html. Anywhere inside the head or body will work. Set the src attribute to the url of the $.js module and add a main-src attribute set to the url of the main module of your application.
 
 ``` html
 	<script type="text/javascript" src="/0x24/js/lib/dev/$.js" main-src="/0x24/js/intro.js"></script>
