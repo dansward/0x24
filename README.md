@@ -29,14 +29,17 @@ A dependency is a module that must be loaded before another module that depends 
 ### Step 1:
 
 Add a <script> tag to your html. Anywhere inside the <head> or <body> will work. Set the src attribute to the url of the $.js module and add a main-src attribute set to the url of the main module of your application.
+
 ``` html
 	<script type="text/javascript" src="/0x24/js/lib/dev/$.js" main-src="/0x24/js/intro.js"></script>
 ```
+
 ### Step 2:
 
 Develop your application and let $ manage your application's dependencies for you.
 
 ## Syntax
+
 ``` js
 	/*
 	 * @param {string} modUrl     Required - The url of the dependent module
@@ -46,6 +49,7 @@ Develop your application and let $ manage your application's dependencies for yo
 	 */
 	$.require( modUrl, depUrls, [callback] )
 ```	
+
 ### $.require
 
 #### modUrl
@@ -61,6 +65,7 @@ It is usually best to store all of your modules in the same directory as the $.j
 The depUrls parameter should contain one or an array of structures called sources. A source contains the information needed to load a module that the dependent module requires. Only modules which the dependent module directly uses should be included here. Dependencies of dependencies should be loaded from within their corrosponding modules. This permits a much more modular design. There is also no need to be concerned about loading the same module twice when two or more modules share dependencies. $ will only load a module once regardless of how many times that module is included in dependency lists.
 
 Sources may be a string containing the url of the module or an object with the following structure.
+
 ``` js
 	{
 	    // Required - A string containing the url of the module
@@ -79,6 +84,7 @@ Sources may be a string containing the url of the module or an object with the f
 	    callback : {function}
 	}
 ```
+
 The same rules apply to urls used in the depMods parameter as those used in the modUrl parameter. Reference urls consistently everywhere, always, without exception.
 
 Setting the inline property to true causes $ to load the dependency module as an inline script rather than                            as an external resource. This has proven to speed up load times considerably under very unscientific circumstances and observation. However, this option only works for same origin modules and	imposes a dependendency on and lazy loads the $.ajax.js module which must reside in the same directory as the $.js module. If inline is true, the async and defer options are ignored.
@@ -92,6 +98,7 @@ The callback parameter is a parameterless function containing code to execute af
 ## Examples
 
 ### Example 1: Require & Use $.css.js Module
+
 ``` js
 	$.require('/0x24/js/intro.js', $.path + '$.css.js',
 	function() {
@@ -101,7 +108,9 @@ The callback parameter is a parameterless function containing code to execute af
 	       ]);
 	});
 ```
+
 ### Example 2: Configure & Load Google Web Fonts
+
 ``` js
 	WebFontConfig = {
 	    google: { families: [ 'Istok Web:400,700', 'Droid Sans Mono' ] }
@@ -109,7 +118,9 @@ The callback parameter is a parameterless function containing code to execute af
 	 
 	$.require('/0x24/js/intro.js', 'http://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js');
 ```
+
 ### Example 3: Configure & Load SyntaxHighlighter
+
 ``` js
 	$.require('/0x24/js/intro.js', $.path + '$.css.js',
 	function() {
