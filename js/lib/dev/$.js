@@ -4,7 +4,7 @@
 		srx = /^(.+)\$(-min)?\.js$/,
 		scripts, env, src, i;
 	
-	$ = window.$ || {};
+	$ = top.$ || {};
 	
 	$.require = $['require'] || function (modUrl, depSrcs, callback) {
 		var scripts = [], inlines = [], script, module, src, i;
