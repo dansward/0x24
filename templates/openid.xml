@@ -1,4 +1,5 @@
 <div id="openid-form">
+	<div id="openid-ui-close"></div>
 	<div id="openid-title">Sign In</div>
 	<p>Please click your account provider:</p>
 	<div id="openid-btns"></div>
