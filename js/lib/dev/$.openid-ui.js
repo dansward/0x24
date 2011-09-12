@@ -1,198 +1,167 @@
-(function() {
-	var $ = top.$;
+$.require($.path + '$.openid-ui.js',
+[
+ 	$.path + '$.events.js',
+	$.path + '$.css.js',
+	$.path + '$.ajax.js',
+	$.path + '$.dom.js',
+	$.path + '$.resize.js',
+	$.path + '$.drag.js',
+	$.path + '$.openid-conf.js',
+	$.path + '$.openid.js'
+],
+function() {
+	var openidProviders, openidUI, openidForm, openidButtons, openidInput,
+		openidLabel, openidProvider, openidUser, openidSubmit, frm, openid;
 	
-	$.require($.path + '$.openid-ui.js',
-	[
-	 	$.path + '$.app.js',
-		$.path + '$.css.js',
-		$.path + '$.ajax.js',
-		$.path + '$.dom.js',
-		$.path + '$.template.js',
-		$.path + '$.openid-conf.js'
-	],
-	function() {
-		var $ = top.$,
-			openidProviders = openidUI = openidForm = openidButtons = openidInput =
-			openidLabel = openidProvider = openidUser = openidSubmit = frm = null,
-			openid = {
-				userId: '',
-				userUrl: '',
-				signinUrl: '',
-				signoutUrl: ''
-			};
-		
-		function setOpenId(value) { openid = value; }
-		
-		function init() {
-			post(function(openid) {
-				if (openid.userId === '') {
-					$.app.subscribe('openid-conf-response', display);
-					$.app.publish('openid-conf-request');
-				}
-				else { $.app.publish('openid-signin-response', openid); }
-			});
-		}
-		
-		function openidConf(providers) {
-			$.app.unsubscribe('openid-conf-response', openidConf);
-			openidProviders = providers;
-		}
-		
-		function post(callback) {
-			$.ajax.postJSON({
-				url: '/api/openid',
-				data: openid,
-				callback: function(response) {
-					var openid;
-					try { openid = JSON.parse(response.xhr.responseText); }
-					catch (e) {
-						openid = {
-							userId: '',
-							userUrl: '',
-							signinUrl: '',
-							signoutUrl: ''
-						};
-					}
-					if ($.isFunction(callback)) { callback(openid); }
+	function init() {
+		if (!openidUI) {
+			$.events.subscribe('openid-conf-response', initUI);
+			$.events.publish('openid-conf-request');
+			$.css.style('/css/openid.css?1');
+			$.ajax({
+				url : $.path + '$.openid-conf.js',
+				callback : function(resp) {
+					initUI(eval('(function(){' + resp.xhr.responseText + 'return providers;})();'));
 				}
 			});
+		} else {
+			openidUI.style.display = openidForm.style.display = 'block';
 		}
-		
-		function display(providers) {
-			if (!openidUI) {
-				$.app.unsubscribe('openid-conf-response', display);
-				$.css.require('/css/openid.css');
-				openidProviders = providers;
-				openidUI = document.createElement('div');
-				openidUI.id = 'openid-ui';
-				openidUI.style.display = 'none';
-				document.body.appendChild(openidUI);
-				$.template.parse({
-					src : '/templates/openid.xml',
-					callback : build
-				});
-			} else { openidUI.style.display = openidForm.style.display = 'block'; }
-		}
-		
-		function build(ui) {
-			var btn = null, providerid = '', i = 0;
-			openidUI.innerHTML = ui;
-			openidForm = document.getElementById('openid-form');
-			openidButtons = document.getElementById('openid-btns');
-			openidInput = document.getElementById('openid-input');
-			openidLabel = document.getElementById('openid-label');
-			openidProvider = document.getElementById('openid-provider');
-			openidUser = document.getElementById('openid-user');
-			openidSubmit = document.getElementById('openid-submit');
-			if (openidProviders.large) {
-				for (providerid in openidProviders.large) {
-					btn = getOpenIdButton(i++, 'large', providerid);
-					openidButtons.appendChild(btn);
-				}
-			}
-			if (openidProviders.large && openidProviders.small) { 
-				openidButtons.appendChild(document.createElement('br'));
-			}
-			if (openidProviders.small) {
-				for (providerid in openidProviders.small) {
-					btn = getOpenIdButton(i++, 'small', providerid);
-					openidButtons.appendChild(btn);
-				}
-			}
-			$.dom.addEventListener({
-				element: openidSubmit,
-				event: "click",
-				handler: submit
-			});
-			openidUI.style.display = 'block';
-		}
-		
-		function getOpenIdButton(index, size, providerid) {
-			var x = (size == 'small' ? -index * 24 : -index * 100) - 2,
-				y = (size == 'small' ? -60 : 0) - 2,
-				btn = document.createElement('button');
-			btn.id = size + '-' + providerid;
-			btn.title = 'Sign-In with ' + openidProviders[size][providerid]['name'];
-			btn.className = 'openid-btn openid-' + size + '-btn';
-			btn.style.backgroundPosition =  x + 'px ' + y + 'px';
-			$.dom.addEventListener(btn, 'click', function () { signin(size, providerid); });
-			return btn;
-		}
-		
-		function signin(size, providerid) {
-			highlight(size + '-' + providerid);
-			openidProvider.value = openidProviders[size][providerid]['url'] || '';
-			openidUser.value = '';
-			if (openidProviders[size][providerid]['label']) {
-				openidLabel.innerHTML = openidProviders[size][providerid]['label'];
-				openidInput.style.display = 'block';
-			} else {
-				openidInput.style.display = 'none';
-				submit();
-			}
-		}
-		
-		function signout() {
-			$.ajax.get({
-				url: openid.signoutUrl,
-				callback: function() {
-					openid = {
-						userId: '',
-						userUrl: '',
-						signinUrl: '',
-						signoutUrl: ''
-					};
-					$.app.publish('openid-signout-response', openid);
-				}
-			});
-		}
-		
-		function submit() {
-			var provider = openidProvider.value,
-				user = openidUser.value,
-				url = provider ? provider.replace('{userid}', user) : user;
-			openid.userUrl = url;
-			post(function(openid) {
-				$.app.subscribe('openid-signin-response', function() { openidUI.removeChild(frm); });
-				frm = document.createElement('iframe');
-				frm.id = 'openid-frame';
-				frm.scrolling = 'no';
-				frm.frameBorder = 'yes';
-				frm.onload = resizeIFrame;
-				frm.src = openid.signinUrl;
-				openidForm.style.display = 'none';
-				openidUI.appendChild(frm);
-			});
-		}
-		
-		function resizeIFrame() {
-			var body = frm.contentWindow.document.body;
-			frm.height = body.scrollHeight; //body.scrollHeight + (body.offsetHeight - body.clientHeight);
-			frm.width = body.scrollWidth; //body.scrollWidth + (body.offsetWidth - body.clientWidth);
-		}		
-		
-		function highlight(providerid) {
-			var highlight = document.getElementById('openid-highlight'),
-				btn;
-			// remove previous highlight.
-			if (highlight) {
-				btn = highlight.getElementsByTagName('button')[0];
-				highlight.parentNode.replaceChild(btn, highlight);
-			}
-			// add new highlight.
-			btn = document.getElementById(providerid);
-			highlight = document.createElement('div');
-			highlight.id = 'openid-highlight';
-			btn.parentNode.replaceChild(highlight, btn);
-			highlight.appendChild(btn);
-		}
+	}
+
+	function initUI(providers) {
+		openidProviders = providers;
+		openidUI = document.createElement('div');
+		openidUI.id = 'openid-ui';
+		openidUI.style.display = 'none';
+		document.body.appendChild(openidUI);
+		$.ajax({
+			url : '/templates/openid.xml',
+			callback : build
+		});
+	}
 	
-		$.app.subscribe('openid-signin-request', init);
-		$.app.subscribe('openid-signout-request', signout);
-		$.app.subscribe('openid-signin-response', setOpenId);
-		$.app.subscribe('openid-signout-response', setOpenId);
-		
-			
-	});
+	function build(resp) {
+		var btn, providerid, i = 0;
+		openidUI.innerHTML = resp.xhr.responseText;
+		openidForm = document.getElementById('openid-form');
+		openidButtons = document.getElementById('openid-btns');
+		openidInput = document.getElementById('openid-input');
+		openidLabel = document.getElementById('openid-label');
+		openidProvider = document.getElementById('openid-provider');
+		openidUser = document.getElementById('openid-user');
+		openidSubmit = document.getElementById('openid-submit');
+		if (openidProviders.large) {
+			for (providerid in openidProviders.large) {
+				btn = getOpenIdButton(i++, 'large', providerid);
+				openidButtons.appendChild(btn);
+			}
+		}
+		if (openidProviders.large && openidProviders.small) { 
+			openidButtons.appendChild(document.createElement('br'));
+		}
+		if (openidProviders.small) {
+			for (providerid in openidProviders.small) {
+				btn = getOpenIdButton(i++, 'small', providerid);
+				openidButtons.appendChild(btn);
+			}
+		}
+		$.dom.addEventListener({
+			element: openidSubmit,
+			event: "click",
+			handler: getUrls
+		});
+		openidUI.style.display = openidForm.style.display = 'block';
+		$.drag({element : openidUI, minX : 200, minY : 150, maxX : 874, maxY : 450});
+		$.resize({element : openidUI, minX : 200, minY : 150, maxX : 874, maxY : 450});
+	}
 	
-})();
+	function getOpenIdButton(index, size, providerid) {
+		var x = (size == 'small' ? -index * 24 : -index * 100) - 2,
+			y = (size == 'small' ? -60 : 0) - 2,
+			btn = document.createElement('button');
+		btn.id = size + '-' + providerid;
+		btn.title = 'Sign-In with ' + openidProviders[size][providerid]['name'];
+		btn.className = 'openid-btn openid-' + size + '-btn';
+		btn.style.backgroundPosition =  x + 'px ' + y + 'px';
+		$.dom.addEventListener(btn, 'click', function () { selectProvider(size, providerid); });
+		return btn;
+	}
+	
+	function selectProvider(size, providerid) {
+		highlight(size + '-' + providerid);
+		openidProvider.value = openidProviders[size][providerid]['url'] || '';
+		openidUser.value = '';
+		if (openidProviders[size][providerid]['label']) {
+			openidLabel.innerHTML = openidProviders[size][providerid]['label'];
+			openidInput.style.display = 'block';
+		} else {
+			openidInput.style.display = 'none';
+			getUrls();
+		}
+	}		
+	
+	function highlight(providerid) {
+		var highlight = document.getElementById('openid-highlight'),
+			btn;
+		if (highlight) {
+			btn = highlight.getElementsByTagName('button')[0];
+			highlight.parentNode.replaceChild(btn, highlight);
+		}
+		btn = document.getElementById(providerid);
+		highlight = document.createElement('div');
+		highlight.id = 'openid-highlight';
+		btn.parentNode.replaceChild(highlight, btn);
+		highlight.appendChild(btn);
+	}
+	
+	function getUrls() {
+		var provider = openidProvider.value,
+			user = openidUser.value,
+			url = provider ? provider.replace('{userid}', user) : user;
+		openid.userUrl = url;
+		$.events.subscribe('openid-update-response', signin);
+		$.events.publish('openid-update-request', openid);
+	}
+	
+	function signin() {
+		$.events.unsubscribe('openid-update-response', signin);
+		if (!openid.userId.length) {
+			frm = document.createElement('iframe');
+			frm.id = 'openid-frame';
+			frm.scrolling = 'no';
+			frm.frameBorder = 'yes';
+			frm.src = openid.signinUrl;
+			openidForm.style.display = 'none';
+			openidUI.appendChild(frm);
+			$.events.subscribe('openid-update-response', close);
+		} else { close(); }
+	}
+	
+	function close(resp) {
+		if (frm) {
+			$.events.unsubscribe('openid-update-response', close);
+			openidUI.removeChild(frm);
+			frm = null;
+		}
+		openidUI.style.display = 'none';
+	}
+	
+	function signout(openid) {
+		$.ajax({
+			url: openid.signoutUrl,
+			callback: function() { $.events.publish('openid-update-request'); }
+		});
+	}
+	
+	function setOpenId(value) {
+		openid = value;
+	}
+
+
+	$.events.subscribe('openid-update-response', setOpenId);
+	$.events.subscribe('openid-signin-request', init);
+	$.events.subscribe('openid-signout-request', signout);
+	
+		
+});
