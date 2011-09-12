@@ -43,6 +43,18 @@
 		}
 	};
 	
+	$.css.getStyle = $.css['getStyle'] || function(element, cssRule){
+		var value = "";
+		if(document.defaultView && document.defaultView.getComputedStyle){
+			value = document.defaultView.getComputedStyle(element, "").getPropertyValue(cssRule);
+		}
+		else if(element.currentStyle){
+			cssRule = cssRule.replace(/\-(\w)/g, function (match, p1){ return p1.toUpperCase(); });
+			value = element.currentStyle[cssRule];
+		}
+		return value;
+	}
+	
 	function appendStyle(resp) {
 		var style;
 		if (document.createStyleSheet) { 
