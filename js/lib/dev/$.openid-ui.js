@@ -10,14 +10,15 @@ $.require($.path + '$.openid-ui.js',
 	$.path + '$.openid.js'
 ],
 function() {
-	var openidProviders, openidUI, openidForm, openidButtons, openidInput,
-		openidLabel, openidProvider, openidUser, openidSubmit, frm, openid;
+	var openidProviders, openidUI, openidClose, openidForm, openidButtons,
+		openidInput, openidLabel, openidProvider, openidUser, openidSubmit,
+		frm, openid;
 	
 	function init() {
 		if (!openidUI) {
 			$.events.subscribe('openid-conf-response', initUI);
 			$.events.publish('openid-conf-request');
-			$.css.style('/css/openid.css?1');
+			$.css.style('/css/openid.css?');
 			$.ajax({
 				url : $.path + '$.openid-conf.js',
 				callback : function(resp) {
@@ -36,7 +37,7 @@ function() {
 		openidUI.style.display = 'none';
 		document.body.appendChild(openidUI);
 		$.ajax({
-			url : '/templates/openid.xml',
+			url : '/templates/openid.xml?',
 			callback : build
 		});
 	}
@@ -44,6 +45,7 @@ function() {
 	function build(resp) {
 		var btn, providerid, i = 0;
 		openidUI.innerHTML = resp.xhr.responseText;
+		openidClose = document.getElementById('openid-ui-close');
 		openidForm = document.getElementById('openid-form');
 		openidButtons = document.getElementById('openid-btns');
 		openidInput = document.getElementById('openid-input');
@@ -66,11 +68,8 @@ function() {
 				openidButtons.appendChild(btn);
 			}
 		}
-		$.dom.addEventListener({
-			element: openidSubmit,
-			event: "click",
-			handler: getUrls
-		});
+		$.dom.addEventListener(openidClose, "click", close);
+		$.dom.addEventListener(openidSubmit, "click", getUrls);
 		openidUI.style.display = openidForm.style.display = 'block';
 		$.drag({element : openidUI, minX : 200, minY : 150, maxX : 874, maxY : 450});
 		$.resize({element : openidUI, minX : 200, minY : 150, maxX : 874, maxY : 450});
