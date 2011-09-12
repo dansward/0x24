@@ -11,7 +11,7 @@ function () {
 			callback: null
 		},
 		cache = {},
-		build = isFunction($.template) ? $.template : void 0;
+		build = $.isFunction($.template) ? $.template : void 0;
 	
 	$.template = $['template'] || {};
 
@@ -41,8 +41,7 @@ function () {
 	}
 
 	function fetch(conf) {
-		$.ajax.send({
-			method : 'GET',
+		$.ajax({
 			url : conf.src,
 			callback : function (args) {
 				conf.source = args.xhr.responseText;
