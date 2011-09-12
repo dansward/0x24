@@ -24,7 +24,7 @@ function() {
 		var x, y;
 		if (e.which === 1) {
 			document.body.onmousemove = function(e) { drag(fixE(e), o); };
-			document.body.onmouseup = function(e) { end(o); };
+			document.body.onmouseup = function(e) { end(fixE(e), o); };
 			disableSelection();
 			y = parseInt($.css.getStyle(o.element, 'top'));
 			x = parseInt($.css.getStyle(o.element, 'left'));
@@ -64,7 +64,7 @@ function() {
 		e.stopPropagation ? e.stopPropagation() : e.cancelBubble = true;
 	}
 
-	function end(o) {
+	function end(e, o) {
 		enableSelection();
 		document.body.onmousemove = null;
 		document.body.onmouseup = null;
