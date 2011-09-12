@@ -1,129 +1,98 @@
-/*
-	Based on Aaron Boodman's dom-drag.js
-	http://www.youngpup.net/projects/dom-drag/
-*/
-(function() {
-	var $ = top.$;
-	
-	$.require($.path + '$.drag.js', $.path + '$.underscore.js',
-	function() {
+$.require($.path + '$.drag.js', $.path + '$.underscore.js',
+function() {
 		
-		var $ = top.$,
-			defaults = {
-				element : null,
-				handle : null,
-				minX : null,
-				minY : null,
-				maxX : null,
-				maxY : null,
-				hmode : true,
-				vmode : true,
-				xMapper : null,
-				yMapper : null,
-				onDragStart : function(x, y) {},
-				onDrag : function(x, y) {},
-				onDragEnd : function(x, y) {}
-			};
-	
-		$.drag = function(conf) {
-			var o = $.defaults(conf, defaults);
-			if (!o.handle) {
-				o.handle = document.createElement('div');
-				o.handle.style.cssText = 'position:absolute;top:0px;right:0px;bottom:0px;left:0px;background-color:transparent;';
-				o.element.appendChild(o.handle);
-			}
-			o.handle.onmousedown = function(e) { start(fixE(e), o); };
-			if (o.hmode && isNaN(parseInt(o.element.style.left))) { o.element.style.left = "0px"; }
-			if (o.vmode && isNaN(parseInt(o.element.style.top))) { o.element.style.top = "0px"; }
-			if (!o.hmode && isNaN(parseInt(o.element.style.right))) { o.element.style.right = "0px"; }
-			if (!o.vmode && isNaN(parseInt(o.element.style.bottom))) { o.element.style.bottom = "0px"; }
+	var defaults = {
+			element : null,
+			handle : null,
+			minX : null,
+			minY : null,
+			maxX : null,
+			maxY : null
 		};
+
+	$.drag = $['drag'] || function(conf) {
+		var i, o = $.defaults(conf, defaults);
+		if (!o.handle) o.handle = o.element;
+		o.handle.onmousedown = function(e) { start(fixE(e), o); };
+		o.minX = o.minX || 0;
+		o.minY = o.minY || 0;
+		o.maxX = o.maxX || null;
+		o.maxY = o.maxY || null;
+	};
+
+	function start(e, o) {
+		var x, y;
+		if (e.which === 1) {
+			document.body.onmousemove = function(e) { drag(fixE(e), o); };
+			document.body.onmouseup = function(e) { end(o); };
+			disableSelection();
+			y = parseInt($.css.getStyle(o.element, 'top'));
+			x = parseInt($.css.getStyle(o.element, 'left'));
+			o.lastX = e.clientX;
+			o.lastY = e.clientY;
+		}
+		e.stopPropagation ? e.stopPropagation() : e.cancelBubble = true;
+	}
+
+	function drag(e, o) {
+		var ex = e.clientX,
+			ey = e.clientY,
+			dx = ex - o.lastX,
+			dy = ey - o.lastY,
+			t = parseInt($.css.getStyle(o.element, 'top')),
+			l = parseInt($.css.getStyle(o.element, 'left')),
+			w = parseInt($.css.getStyle(o.element, 'width')),
+			h = parseInt($.css.getStyle(o.element, 'height')),
+			et = Math.max(t + dy, o.minY),
+			el = Math.max(l + dx, o.minX),
+			er = $.isNumber(o.maxX) ? Math.min(l + w + dx, o.maxX) : l + w + dx,
+			eb = $.isNumber(o.maxY) ? Math.min(t + h + dy, o.maxY) : t + h + dy,
+			dt = et - t,
+			dl = el - l,
+			dr = er - (l + w),
+			db = eb - (t + h);
+		dy = Math.min(Math.abs(dt), Math.abs(db)) * (dy >= 0 ? 1 : -1);
+		dx = Math.min(Math.abs(dl), Math.abs(dr)) * (dx >= 0 ? 1 : -1);
+		if (ey >= t + dy && ey <= t + h + dy && ex >= l + dy && ex <= l + w + dx) {
+			o.element.style.top = t + dy + 'px';
+			o.element.style.left = l + dx + 'px';
+			o.element.style.width = w + 'px';
+			o.element.style.height = h + 'px';
+			o.lastX = ex;
+			o.lastY = ey;
+		}
+		e.stopPropagation ? e.stopPropagation() : e.cancelBubble = true;
+	}
+
+	function end(o) {
+		enableSelection();
+		document.body.onmousemove = null;
+		document.body.onmouseup = null;
+		e.stopPropagation ? e.stopPropagation() : e.cancelBubble = true;
+	}
 	
-		function start(e, o) {
-			var x, y;
-			if (e.which === 1) {
-				document.body.onmousemove = function(e) { drag(fixE(e), o); };
-				document.body.onmouseup = function(e) { end(fixE(e), o); };
-				disableSelection();
-				y = parseInt(o.vmode ? o.element.style.top : o.element.style.bottom);
-				x = parseInt(o.hmode ? o.element.style.left : o.element.style.right);
-				o.onDragStart(x, y);
-				o.lastMouseX = e.clientX;
-				o.lastMouseY = e.clientY;
-				if (o.hmode) {
-					if (o.minX !== null) { o.minMouseX = e.clientX - x + o.minX; }
-					if (o.maxX !== null) { o.maxMouseX = o.minMouseX + o.maxX - o.minX; }
-				} else {
-					if (o.minX !== null) { o.maxMouseX = -o.minX + e.clientX + x; }
-					if (o.maxX !== null) { o.minMouseX = -o.maxX + e.clientX + x; }
-				}
-				if (o.vmode) {
-					if (o.minY !== null) { o.minMouseY = e.clientY - y + o.minY; }
-					if (o.maxY !== null) { o.maxMouseY = o.minMouseY + o.maxY - o.minY; }
-				} else {
-					if (o.minY !== null) { o.maxMouseY = -o.minY + e.clientY + y; }
-					if (o.maxY !== null) { o.minMouseY = -o.maxY + e.clientY + y; }
-				}
-			}
-			return false;
-		}
+	function fixE(e) {
+		e = e || window.event;
+	    e.target = e.target ? e.target : e.srcElement;
+	    e.which = e.which ? e.which :
+		            e.button === 1 ? 1 :
+		            e.button === 2 ? 3 : 
+		            e.button === 4 ? 2 : 1;
+	    return e;
+	}
 	
-		function drag(e, o) {
-			var ey = e.clientY,
-				ex = e.clientX,
-				y = parseInt(o.vmode ? o.element.style.top : o.element.style.bottom),
-				x = parseInt(o.hmode ? o.element.style.left : o.element.style.right),
-				nx, ny;
-			if (o.minX !== null) { ex = o.hmode ? Math.max(ex, o.minMouseX) : Math.min(ex, o.maxMouseX); }
-			if (o.maxX !== null) { ex = o.hmode ? Math.min(ex, o.maxMouseX) : Math.max(ex, o.minMouseX); }
-			if (o.minY !== null) { ey = o.vmode ? Math.max(ey, o.minMouseY) : Math.min(ey, o.maxMouseY); }
-			if (o.maxY !== null) { ey = o.vmode ? Math.min(ey, o.maxMouseY) : Math.max(ey, o.minMouseY); }
-			nx = x + (ex - o.lastMouseX) * (o.hmode ? 1 : -1);
-			ny = y + (ey - o.lastMouseY) * (o.vmode ? 1 : -1);
-			if (o.xMapper) { nx = o.xMapper(y); }
-			if (o.yMapper) { ny = o.yMapper(x); }
-			o.element.style[o.hmode ? "left" : "right"] = nx + "px";
-			o.element.style[o.vmode ? "top" : "bottom"] = ny + "px";
-			o.lastMouseX = ex;
-			o.lastMouseY = ey;
-			o.onDrag(nx, ny);
-			return false;
-		}
+	function disableSelection() {
+		document.onselectstart = function() { return false; };
+		document.body.unselectable = 'on';
+		document.body.style.MozUserSelect = 'none';
+		document.body.style.webkitUserSelect = 'none';
+	}
 	
-		function end(e, o) {
-			enableSelection();
-			document.body.onmousemove = null;
-			document.body.onmouseup = null;
-			o.onDragEnd(
-				parseInt(o.element.style[o.hmode ? "left" : "right"]),
-				parseInt(o.element.style[o.vmode ? "top" : "bottom"])
-			);
-		}
-		
-		function fixE(e) {
-			e = e || window.event;
-		    e.target = e.target ? e.target : e.srcElement;
-		    e.which = e.which ? e.which :
-			            e.button === 1 ? 1 :
-			            e.button === 2 ? 3 : 
-			            e.button === 4 ? 2 : 1;
-		    return e;
-		}
-		
-		function disableSelection() {
-			document.onselectstart = function() { return false; };
-			document.body.unselectable = 'on';
-			document.body.style.MozUserSelect = 'none';
-			document.body.style.webkitUserSelect = 'none';
-		}
-		
-		function enableSelection() {
-			document.onselectstart = void 0;
-			document.body.unselectable = 'off';
-			document.body.style.MozUserSelect = 'text';
-			document.body.style.webkitUserSelect = 'text';
-		}
-	
-	});
-	
-})();
+	function enableSelection() {
+		document.onselectstart = void 0;
+		document.body.unselectable = 'off';
+		document.body.style.MozUserSelect = 'text';
+		document.body.style.webkitUserSelect = 'text';
+	}
+
+});
