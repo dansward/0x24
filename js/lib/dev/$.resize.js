@@ -1,4 +1,4 @@
-$.require($.path + '$.resize.js', $.path + '$.underscore.js',
+$.require($.path + '$.resize.js', [$.path + '$.css.js', $.path + '$.underscore.js'],
 function() {
 	
 	var defaults = {
@@ -6,7 +6,11 @@ function() {
 			minWidth : 10,
 			minHeight : 10,
 			maxWidth : null,
-			maxHeight : null
+			maxHeight : null,
+			minX : null,
+			minY : null,
+			maxX : null,
+			maxY : null
 		},
 		nwrx = /\$-resize-nw/, nrx = /\$-resize-n/, nerx = /\$-resize-ne/, erx = /\$-resize-e/,
 		serx = /\$-resize-se/, srx = /\$-resize-s/, swrx = /\$-resize-sw/, wrx = /\$-resize-w/;
@@ -85,65 +89,72 @@ function() {
 	
 	function start(o, g, e) {
 		if (e.which === 1) {
-			document.body.onmouseup = end;
+			document.body.onmouseup = function(e) { end(o, g, fixE(e)); };
 			document.body.onmousemove = function(e) { drag(o, g, fixE(e)); };
 			document.body.style.cursor = g.style.cursor;
 			disableSelection();
 			o.lastX = e.clientX;
 			o.lastY = e.clientY;
 		}
+		e.stopPropagation ? e.stopPropagation() : e.cancelBubble = true;
 	}
 	
 	function drag(o, g, e) {
 		var rect = o.element.getBoundingClientRect(),
 			ex = e.clientX,
 			ey = e.clientY,
-			dx = o.lastX - ex,
-			dy = o.lastY - ey,
-			w = parseInt(o.element.style.width) || 0,
-			h = parseInt(o.element.style.height) || 0,
-			ew, eh, nx, ny;
+			dx = ex - o.lastX,
+			dy = ey - o.lastY,
+			w = parseInt($.css.getStyle(o.element, 'width')),
+			h = parseInt($.css.getStyle(o.element, 'height')),
+			t = parseInt($.css.getStyle(o.element, 'top')),
+			l = parseInt($.css.getStyle(o.element, 'left')),
+			ew, eh, et, el, eb, er;
 		if (nrx.test(g.className)) {
-			eh = Math.max(Math.min(h + dy, o.maxHeight || h + dy), o.minHeight);
-			dy = h - eh;
-			if (dy  > 0 && ey > rect.top || dy < 0 && ey < rect.top) {
-				o.element.style.height = eh + 'px';
-				o.element.style.top = (parseInt(o.element.style.top) || 0) + dy + 'px';
+			eh = Math.max(Math.min(h - dy, o.maxHeight || (h - dy)), o.minHeight);
+			et = $.isNumber(o.minY) ? Math.max(t + dy, o.minY) : t + dy;
+			dy = Math.min(Math.abs(eh - h), Math.abs(et - t)) * (dy >= 0 ? 1 : -1);
+			if (dy  >= 0 && ey >= rect.top || dy <= 0 && ey <= rect.top) {
+				o.element.style.height = h - dy + 'px';
+				o.element.style.top = t + dy + 'px';
 			}
 		}
 		if (srx.test(g.className)) {
-			eh = Math.max(Math.min(h - dy, o.maxHeight || h - dy), o.minHeight);
-			dy = h - eh;
-			if (dy  > 0 && ey < rect.bottom || dy < 0 && ey > rect.bottom) {
-				o.element.style.height = eh + 'px';
-				o.element.style.bottom = (parseInt(o.element.style.bottom) || 0) + dy + 'px';
+			eh = Math.max(Math.min(h - dy, o.maxHeight || (h - dy)), o.minHeight);
+			eb = $.isNumber(o.maxY) ? Math.min(t + h + dy, o.maxY) : t + h + dy;
+			dy = Math.min(Math.abs(eh - h), Math.abs(eb - (t + h))) * (dy >= 0 ? 1 : -1);
+			if (dy >= 0 && ey >= rect.bottom || dy <= 0 && ey <= rect.bottom) {
+				o.element.style.height = h + dy + 'px';
 			}
 		}
 		if (wrx.test(g.className) || nwrx.test(g.className) || swrx.test(g.className)) {
-			ew = Math.max(Math.min(w + dx, o.maxWidth || w + dx), o.minWidth);
-			dx = w - ew;
-			if (dx  > 0 && ex > rect.left || dx < 0 && ex < rect.left) {
-				o.element.style.width = ew + 'px';
-				o.element.style.left = (parseInt(o.element.style.left) || 0) + dx + 'px';
+			ew = Math.max(Math.min(w - dx, o.maxWidth || (w - dx)), o.minWidth);
+			el = $.isNumber(o.minX) ? Math.max(l + dx, o.minX) : l + dx;
+			dx = Math.min(Math.abs(ew - w), Math.abs(el - l)) * (dx >= 0 ? 1 : -1);
+			if (dx >= 0 && ex >= rect.left || dx <= 0 && ex <= rect.left) {
+				o.element.style.width = w - dx + 'px';
+				o.element.style.left = l + dx + 'px';
 			}
 		}
 		if (erx.test(g.className) || nerx.test(g.className) || serx.test(g.className)) {
-			ew = Math.max(Math.min(w - dx, o.maxWidth || w - dx), o.minWidth);
-			dx = w - ew;
-			if (dx  > 0 && ex < rect.right || dx < 0 && ex > rect.right) {
-				o.element.style.width = ew + 'px';
-				o.element.style.right = (parseInt(o.element.style.right) || 0) + dx + 'px';
+			ew = Math.max(Math.min(w - dx, o.maxWidth || (w - dx)), o.minWidth);
+			er = $.isNumber(o.maxX) ? Math.min(l + w + dx, o.maxX) : l + w + dx;
+			dx = Math.min(Math.abs(ew - w), Math.abs(er - (l + w))) * (dx >= 0 ? 1 : -1);
+			if (dx >= 0 && ex >= rect.right || dx <= 0 && ex <= rect.right) {
+				o.element.style.width = w + dx + 'px';
 			}
 		}
 		o.lastX = ex;
 		o.lastY = ey;
+		e.stopPropagation ? e.stopPropagation() : e.cancelBubble = true;
 	}
 	
-	function end() {
+	function end(o, g, e) {
 		document.body.onmousemove = null;
 		document.body.onmouseup = null;
 		enableSelection();
 		document.body.style.cursor = 'default';
+		e.stopPropagation ? e.stopPropagation() : e.cancelBubble = true;
 	}
 	
 	function fixE(e) {
