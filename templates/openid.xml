@@ -1,0 +1,14 @@
+<div id="openid-form">
+	<div id="openid-ui-close"></div>
+	<div id="openid-title">Sign In</div>
+	<p>Please click your account provider:</p>
+	<div id="openid-btns"></div>
+	<div id="openid-input">
+		<label>
+			<span id="openid-label"></span>
+			<input id="openid-provider" type="hidden" />
+			<input id="openid-user" type="text" />
+			<input id="openid-submit" type="button" value="Sign-In" />
+		</label>
+	</div>
+</div>
