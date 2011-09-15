@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>$.js vs $script.js</title>
+		<meta name="description" content="Demo: Include.js loading OpenId module" />
+		<meta name="author" content="dan.s.ward" />
+		<link rel="stylesheet" type="text/css" href="css/0x24.css" />
+		<link rel="stylesheet" type="text/css" href="css/menu.css" />
+	</head>
+	<body style="background-color:#1f577F;color:#eee;">
+		<div id="content">
+			<p style="text-align:center;">
+				<button id="signin-link" class="button-link">Sign In</button>
+				<button id="signout-link" class="button-link">Sign Out</button>
+			</p>
+			<hr />
+			<h1>$script.js</h1>
+			<p>
+				$script does a good job of making sure resources are only loaded once. However,
+				it does not ensure they are loaded and executed in the correct order.
+			</p>
+			<p>
+
+			<img src="images/$script.js.png" alt="fail" width="100%" />
+		</div>
+		<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/script.js/1.3/script.min.js"></script>
+		<script type="text/javascript">
+			$ = {};
+			$.path = '/0x24/js/lib/';
+			$.require = function (modUrl, depSrcs, callback) { $script(depSrcs, callback); };
+			$.require('/0x24/$script.js.html',
+			[
+				$.path + '$.dom.js',
+				$.path + '$.events.js',
+				$.path + '$.openid-ui.js'
+			],
+			function() {
+				var signinLink = document.getElementById("signin-link"),
+					signoutLink = document.getElementById("signout-link"),
+					openid;
+				
+				function signin() { $.events.publish('openid-signin-request', openid); }
+				function signout() { $.events.publish('openid-signout-request', openid); }
+				$.dom.addEventListener(signinLink, "click", signin);
+				$.dom.addEventListener(signoutLink, "click", signout);
+				
+				function toggleSignIn(resp) {
+					openid = resp;
+					signinLink.style.display = (openid.userId.length ? 'none' : 'inline');
+					signoutLink.style.display = (openid.userId.length ? 'inline' : 'none');
+				}
+				$.events.subscribe('openid-update-response', toggleSignIn);
+				$.events.publish('openid-update-request', openid);
+			});
+		</script>
+	</body>
+</html>

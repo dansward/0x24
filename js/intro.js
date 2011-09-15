@@ -2,7 +2,7 @@ $.require('/0x24/js/intro.js', $.path + '$.css.js',
 function() {
 	
 	$.css.style([
-   	    '/0x24/css/0x24.css?30',
+   	    '/0x24/css/0x24.css',
    	    '/0x24/css/menu.css'
    	]);
 	

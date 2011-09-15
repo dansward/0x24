@@ -5,24 +5,50 @@ $.require($.path + '$.openid-ui.js',
 	$.path + '$.ajax.js',
 	$.path + '$.dom.js',
 	$.path + '$.resize.js',
-	$.path + '$.drag.js',
-	$.path + '$.openid-conf.js',
-	$.path + '$.openid.js'
+	$.path + '$.drag.js'
 ],
 function() {
-	var openidProviders, openidUI, openidClose, openidForm, openidButtons,
+	var cssPath,
+		openidProviders, openidUI, openidClose, openidForm, openidButtons,
 		openidInput, openidLabel, openidProvider, openidUser, openidSubmit,
 		frm, openid;
+	
+	function newOpenId() { return {userId:'',userUrl:'',signinUrl:'',signoutUrl: ''}; }
+		
+	function update(args) {
+		if (!args) {
+			if (openid && !openid.userId) {
+					openid.userId = '1';
+					args = openid;
+			} else {
+				args = newOpenId();
+				args.signinUrl = 'signin.html';
+				args.signoutUrl = 'signout.html';
+			}
+		}
+		$.events.publish('openid-update-response', args);
+//		$.ajax({
+//			method : 'POST',
+//			url : '/api/openid',
+//			headers : [{'content-type' : 'application/json'}],
+//			data : JSON.stringify(openid ? openid : newOpenId()),
+//			callback : function(resp) {
+//				var result;
+//				try { result = JSON.parse(resp.xhr.responseText); }
+//				catch (e) { result = newOpenId(); }
+//				$.events.publish('openid-update-response', result);
+//			}
+//		});
+	}
 	
 	function init() {
 		if (!openidUI) {
 			$.events.subscribe('openid-conf-response', initUI);
 			$.events.publish('openid-conf-request');
-			$.css.style('/css/openid.css?');
 			$.ajax({
 				url : $.path + '$.openid-conf.js',
 				callback : function(resp) {
-					initUI(eval('(function(){' + resp.xhr.responseText + 'return providers;})();'));
+					initUI(eval('(function(){' + resp.xhr.responseText + 'return config;})();'));
 				}
 			});
 		} else {
@@ -30,14 +56,16 @@ function() {
 		}
 	}
 
-	function initUI(providers) {
-		openidProviders = providers;
+	function initUI(config) {
+		cssPath = config.cssPath;
+		$.css.style(config.cssPath + 'openid.css?21');
+		openidProviders = config.providers;
 		openidUI = document.createElement('div');
 		openidUI.id = 'openid-ui';
 		openidUI.style.display = 'none';
 		document.body.appendChild(openidUI);
 		$.ajax({
-			url : '/templates/openid.xml?',
+			url : config.templatePath + 'openid.xml',
 			callback : build
 		});
 	}
@@ -71,8 +99,8 @@ function() {
 		$.dom.addEventListener(openidClose, "click", close);
 		$.dom.addEventListener(openidSubmit, "click", getUrls);
 		openidUI.style.display = openidForm.style.display = 'block';
-		$.drag({element : openidUI, minX : 200, minY : 150, maxX : 874, maxY : 450});
-		$.resize({element : openidUI, minX : 200, minY : 150, maxX : 874, maxY : 450});
+		$.drag({element : openidUI});
+		$.resize({element : openidUI});
 	}
 	
 	function getOpenIdButton(index, size, providerid) {
@@ -120,7 +148,7 @@ function() {
 			url = provider ? provider.replace('{userid}', user) : user;
 		openid.userUrl = url;
 		$.events.subscribe('openid-update-response', signin);
-		$.events.publish('openid-update-request', openid);
+		update(openid);
 	}
 	
 	function signin() {
@@ -128,6 +156,8 @@ function() {
 		if (!openid.userId.length) {
 			frm = document.createElement('iframe');
 			frm.id = 'openid-frame';
+			frm.width = "100%";
+			frm.height = "150px";
 			frm.scrolling = 'no';
 			frm.frameBorder = 'yes';
 			frm.src = openid.signinUrl;
@@ -147,10 +177,12 @@ function() {
 	}
 	
 	function signout(openid) {
-		$.ajax({
-			url: openid.signoutUrl,
-			callback: function() { $.events.publish('openid-update-request'); }
-		});
+		openid = void 0;
+		update();
+//		$.ajax({
+//			url: openid.signoutUrl,
+//			callback: update
+//		});
 	}
 	
 	function setOpenId(value) {
@@ -158,6 +190,7 @@ function() {
 	}
 
 
+	$.events.subscribe('openid-update-request', update);
 	$.events.subscribe('openid-update-response', setOpenId);
 	$.events.subscribe('openid-signin-request', init);
 	$.events.subscribe('openid-signout-request', signout);

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>$.js vs yepnope.js</title>
+		<meta name="description" content="Demo: yepnope.js.js loading OpenId module" />
+		<meta name="author" content="dan.s.ward" />
+		<link rel="stylesheet" type="text/css" href="css/0x24.css" />
+		<link rel="stylesheet" type="text/css" href="css/menu.css" />
+	</head>
+	<body style="background-color:#81A02C;color:#eee;">
+		<div id="content">
+			<p style="text-align:center;">
+				<button id="signin-link" class="button-link">Sign In</button>
+				<button id="signout-link" class="button-link">Sign Out</button>
+			</p>
+			<hr />
+			<h1>yepnope.js</h1>
+			<p>
+				Using the<br />
+				<code>yepnope({both:depSrcs,complete:callback})</code> or<br />
+				<code>yepnope({load:depSrcs,complete:callback})</code> syntax,<br />
+				yepnope.js fails to execute	modules in the correct order and also loads shared modules multiple times.
+			</p>
+			<img src="images/yepnope.js.png" alt="fail" width="100%" />
+		</div>
+		<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/yepnope/1.0.1/yepnope.min.js"></script>
+		<script type="text/javascript">
+			$ = {};
+			$.path = '/0x24/js/lib/';
+			$.require = function (modUrl, depSrcs, callback) {
+				yepnope({load:depSrcs,complete:callback});
+			};
+			$.require('/0x24/$script.js.html',
+			[
+				$.path + '$.dom.js',
+				$.path + '$.events.js',
+				$.path + '$.openid-ui.js'
+			],
+			function() {
+				var signinLink = document.getElementById("signin-link"),
+					signoutLink = document.getElementById("signout-link"),
+					openid;
+				
+				function signin() { $.events.publish('openid-signin-request', openid); }
+				function signout() { $.events.publish('openid-signout-request', openid); }
+				$.dom.addEventListener(signinLink, "click", signin);
+				$.dom.addEventListener(signoutLink, "click", signout);
+				
+				function toggleSignIn(resp) {
+					openid = resp;
+					signinLink.style.display = (openid.userId.length ? 'none' : 'inline');
+					signoutLink.style.display = (openid.userId.length ? 'inline' : 'none');
+				}
+				$.events.subscribe('openid-update-response', toggleSignIn);
+				$.events.publish('openid-update-request', openid);
+			});
+		</script>
+	</body>
+</html>

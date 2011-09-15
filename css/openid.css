@@ -1,5 +1,5 @@
 #openid-ui {
-	position:absolute;
+	position:fixed;
 	top:150px;
 	right:250px;
 	left:250px;
@@ -21,7 +21,7 @@
 	right:5px;
 	width:16px;
 	height:16px;
-	background-image:url('/images/openid-close.png');
+	background-image:url('images/openid-close.png');
 	border: 2px solid #DDD;
 	border-right: 2px solid #ccc;
 	border-bottom: 2px solid #ccc;
@@ -88,7 +88,7 @@
 }
 
 .openid-btn {
-	background-image: url('/images/openid-providers.png');
+	background-image: url('images/openid-providers.png');
 	padding:0px;
 	cursor:pointer;
 }

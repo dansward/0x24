@@ -4,7 +4,7 @@
 		srx = /^(.+)\$(-min)?\.js$/,
 		scripts, env, src, i;
 	
-	$ = top.$ || {};
+	$ = window.$ || {};
 	
 	$.require = $['require'] || function (modUrl, depSrcs, callback) {
 		var scripts = [], inlines = [], script, module, src, i;
@@ -29,7 +29,7 @@
 					script = document.createElement('script');
 					script.type = 'text/javascript';
 					script.src = src.url;
-					script.async = !!src.async;
+					script.async = !src.async;
 					script.defer = !!src.defer;
 					script.onload = script.onreadystatechange = modload(src.url, script);
 					scripts.push(script);
