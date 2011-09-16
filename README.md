@@ -1,6 +1,6 @@
 # $ [Hex 24]
 
-$ is a javascript loader with built-in dependency management designed for the development of modular javascript applications. It enables lazy loading of dependencies while preventing duplicate loads. Its API consists of a single property and a single method. It requires no dependencies of its own and weighs in at just over 800 bytes minified and gzipped. It also has the added bonus of being written in code that is easy to read and understand.
+$ is a javascript loader with built-in dependency management designed for the development of modular javascript applications. It enables lazy loading of dependencies, nested dependencies, circular dependencies, and prevents duplicate loads. Its API consists of a single property and a single method. It requires no dependencies of its own and weighs in at about 800 bytes minified and gzipped. It also has the added bonus of being written in code that is easy to read and understand.
 
 ## API
 
