@@ -74,7 +74,7 @@ Sources may be a string containing the url of the module or an object with the f
 	    // Optional - true to create an inline script. Only works for same origin scripts. - Default: false
 	    inline : {bool},
 	     
-	    // Optional - true to include the async attribute of the <script> tag. - Default: false
+	    // Optional - true to include the async attribute of the <script> tag. - Default: true
 	    async : {bool},
 	     
 	    // Optional - true to include the defer attribute of the <script> tag. - Default: false
