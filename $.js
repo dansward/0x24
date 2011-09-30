@@ -89,7 +89,7 @@
 	for (i=0; i<scripts.length; i++) {
 		if (srx.test(scripts[i].src)) {
 			$.path = scripts[i].src.replace(srx, '$1');
-			env = scripts[i].parentElement || document.body;
+			env = scripts[i].parentNode || document.body;
 			src = scripts[i].getAttribute('main-src');
 			if (src) $.require($.path + '$.js', src);
 			break;
