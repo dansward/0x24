@@ -18,18 +18,12 @@
 			module.deps[src.url] = null;
 			if (!modules[src.url]) {
 				modules[src.url] = newmod();
-				if (src['inline']) {
-					inlines.push(function() {
-						$.require(modUrl, {
-							url : $.path + '$.ajax.js',
-							callback :  fetch(src.url)
-						});
-					});
-				} else {
+				if (src['inline']) inlines.push(src.url);
+				else {
 					script = document.createElement('script');
 					script.type = 'text/javascript';
 					script.src = src.url;
-					script.async = !src.async;
+					script.async = src.async === void 0 || !!src.async;
 					script.defer = !!src.defer;
 					script.onload = script.onreadystatechange = modload(src.url, script);
 					scripts.push(script);
@@ -40,7 +34,11 @@
 		}
 		if (!scripts.length && !inlines.length && modready(modUrl, {})) depready(modUrl);
 		while (scripts.length) env.appendChild(scripts.shift());
-		while (inlines.length) inlines.shift()();
+		while (inlines.length)
+			$.require(modUrl, {
+				url : $.path + '$.ajax.js',
+				callback : fetch(inlines.shift())
+			});
 	};
 			
 	function modready(url, urls) {
