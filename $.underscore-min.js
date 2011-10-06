@@ -1,0 +1,1 @@
+$.require($.path+"$.underscore-min.js","http://goo.gl/kUvZi",function(){_.each(_.functions($),function(a,b){_[b]=a}),_.extend(_,$),$=_,_=void 0})

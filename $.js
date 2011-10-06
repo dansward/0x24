@@ -36,7 +36,7 @@
 		while (scripts.length) env.appendChild(scripts.shift());
 		while (inlines.length)
 			$.require(modUrl, {
-				url : $.path + '$.ajax.js',
+				url : $.path + '$.ajax-min.js',
 				callback : fetch(inlines.shift())
 			});
 	};

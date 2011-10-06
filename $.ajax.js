@@ -1,4 +1,4 @@
-$.require($.path + '$.ajax.js', 'http://goo.gl/kUvZi',
+$.require($.path + '$.ajax.js', $.path + '$.underscore-min.js',
 function() {
 	
 	var defaults = {
